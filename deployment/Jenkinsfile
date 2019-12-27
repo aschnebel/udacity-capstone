@@ -13,7 +13,9 @@ pipeline {
     stage('Build Docker Image') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USER')]) {
-          sh 'docker build -t $registry deployment/'
+          sh '''
+            docker build -t $registry deployment/
+          '''
         }
       }
     }
@@ -26,6 +28,50 @@ pipeline {
 						docker push $registry
 					'''
 				}
+      }
+    }
+
+    stage('Set Current Kubectl Context') {
+      steps {
+        withAWS(credentials: 'aws_credentials', region: 'eu-central-1') {
+          sh 'kubectl config use-context arn:aws:eks:eu-central-1:797071288599:cluster/capstone-cluster'
+        }
+      }
+    }
+
+    stage('Deploy Blue container') {
+      steps {
+        withAWS(credentials: 'aws_credentials', region: 'eu-central-1') {
+          sh 'kubectl apply -f ./deployment/blue-controller.yaml'
+        }
+      }
+    }
+
+    stage('Deploy Green container') {
+      steps {
+        withAWS(credentials: 'aws_credentials', region: 'eu-central-1') {
+          sh 'kubectl apply -f ./deployment/green-controller.yaml'
+        }
+      }
+    }
+
+    stage('Create Service, redirect to blue') {
+      steps {
+        withAWS(credentials: 'aws_credentials', region: 'eu-central-1') {
+          sh 'kubectl apply -f ./deployment/blue-service.yaml'
+        }
+      }
+    }
+
+    stage('Approval') {
+      input "Ready to redirect traffic to green?"
+    }
+
+    stage('Create Service, redirect to green') {
+      steps {
+        withAWS(credentials: 'aws_credentials', region: 'eu-central-1') {
+          sh 'kubectl apply -f ./deployment/green-service.yaml'
+        }
       }
     }
   }
