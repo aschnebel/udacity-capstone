@@ -18,6 +18,16 @@ pipeline {
         }
       }
     }
+    stage('Update kubeconfig') {
+      when {
+        expression { params.REQUESTED_ACTION == 'create' }
+      }
+      steps {
+        withAWS(credentials: 'aws_credentials', region: 'eu-central-1') {
+          sh 'aws eks --region eu-central-1 update-kubeconfig --name capstone-cluster'
+        }
+      }
+    }
     stage('Delete k8s cluster') {
       when {
         expression { params.REQUESTED_ACTION == 'delete' }
