@@ -64,7 +64,9 @@ pipeline {
     }
 
     stage('Approval') {
-      input "Ready to redirect traffic to green?"
+      steps {
+        input 'Ready to redirect traffic to green?'
+      }
     }
 
     stage('Create Service, redirect to green') {
