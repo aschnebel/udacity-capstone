@@ -4,7 +4,7 @@ pipeline {
     stage('Create k8s cluster') {
       steps {
         withAWS(credentials: 'aws_credentials', region: 'eu-central-1') {
-          sh 'pwd'
+          sh 'ls -lsa'
         }
       }
     }
