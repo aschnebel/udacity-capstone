@@ -1,5 +1,8 @@
 pipeline {
   agent any
+  environment {
+    registry = 'schnebelalexander/capstone'
+  }
   stages {
     stage('Lint HTML') {
       steps {
@@ -10,7 +13,7 @@ pipeline {
     stage('Build Docker Image') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USER')]) {
-          sh 'docker build -t schnebelalexander/capstone deployment/'
+          sh 'docker build -t $registry deployment/'
         }
       }
     }
@@ -20,7 +23,7 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USER')]) {
 					sh '''
 						docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-						docker push schnebelalexander/capstone
+						docker push $registry
 					'''
 				}
       }
